@@ -5,7 +5,11 @@ import java.util.*;
 // usage:
 // java Sink socketNumber
 public class Sink implements Runnable {
+    private final int MAX_PACKETS = 1000;
     private int socketNumber = 4444;
+    private long sendTimes[] = new long[MAX_PACKETS];
+    private long endTimes[] = new long[MAX_PACKETS];
+    private int seqNos[] = new int[MAX_PACKETS];
     
     public Sink(int socketNumber) {
         this.socketNumber = socketNumber;
@@ -15,7 +19,7 @@ public class Sink implements Runnable {
         DatagramSocket socket = null; 
         try {
             socket = new DatagramSocket(socketNumber);
-            socket.setSoTimeout(5000);
+            socket.setSoTimeout(3000);
         } catch (Exception e) {
 			e.printStackTrace();
 		}	
@@ -36,25 +40,45 @@ public class Sink implements Runnable {
 		long startTime = 0;
         
         try {
-            while (true) {
+            int i = 0;
+            while (i < MAX_PACKETS) {
                 socket.receive(p);
-                long endTime = System.nanoTime();
-                
-                if (firstPacket) {
-                    firstPacket = false;
-                } else {
-                    elapsed += endTime - startTime;
+                endTimes[i] = System.nanoTime() / 1000;
+                sendTimes[i] = fromByteArray(p.getData(), 6, 8);
+                seqNos[i] = (int)fromByteArray(p.getData(), 2, 4);
+                if (startTime == 0) {
+                    startTime = sendTimes[i];
                 }
-                
-                // start here to account for I/O delay
-                startTime = System.nanoTime();
-                pout.println(elapsed / 1000 + " " + p.getLength());
+                i++;
             }
         } catch (Exception e) {
             System.out.println("End");
+            
         }
         
+        for (int i = 0; i < seqNos.length; i++) {
+            if (seqNos[i] == 0) {
+                break;
+            }
+            pout.println(seqNos[i] + " " + (sendTimes[i] - startTime) + " " + (endTimes[i] - startTime));
+            
+        }
         pout.close();
+    }
+    
+    /**
+     * Converts a byte array to an integer.
+     * @param value a byte array
+     * @param start start position in the byte array
+     * @param length number of bytes to consider
+     * @return the integer value
+     */
+    public static long fromByteArray(byte [] value, int start, int length) {
+        long Return = 0;
+        for (int i=start; i< start+length; i++) {
+            Return = (Return << 8) + (value[i] & 0xff);
+        }
+        return Return;
     }
 }
 
