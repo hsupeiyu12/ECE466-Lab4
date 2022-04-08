@@ -6,7 +6,7 @@ import java.util.*;
 // java Sink socketNumber
 public class Sink implements Runnable {
     private final int MAX_PACKETS = 1000;
-    private int socketNumber = 4444;
+    private int socketNumber = 4445;
     private long sendTimes[] = new long[MAX_PACKETS];
     private long endTimes[] = new long[MAX_PACKETS];
     private int seqNos[] = new int[MAX_PACKETS];
@@ -23,7 +23,7 @@ public class Sink implements Runnable {
         } catch (Exception e) {
 			e.printStackTrace();
 		}	
-        byte[] buf = new byte[2000];
+        byte[] buf = new byte[3000];
         DatagramPacket p = new DatagramPacket(buf, buf.length);
         
         PrintStream pout = null;
@@ -41,7 +41,7 @@ public class Sink implements Runnable {
         
         try {
             int i = 0;
-            while (i < MAX_PACKETS) {
+            while (true) {
                 socket.receive(p);
                 endTimes[i] = System.nanoTime() / 1000;
                 sendTimes[i] = fromByteArray(p.getData(), 6, 8);
@@ -52,16 +52,14 @@ public class Sink implements Runnable {
                 i++;
             }
         } catch (Exception e) {
-            System.out.println("End");
-            
+            System.out.println("End sink");
         }
         
-        for (int i = 0; i < seqNos.length; i++) {
+        for (int i = 0; i < MAX_PACKETS; i++) {
             if (seqNos[i] == 0) {
                 break;
             }
             pout.println(seqNos[i] + " " + (sendTimes[i] - startTime) + " " + (endTimes[i] - startTime));
-            
         }
         pout.close();
     }
