@@ -7,8 +7,8 @@ import java.util.concurrent.TimeUnit;
 public class Estimator {
     public static void main(String[] args) {
         String receiver = "localhost";
-        int sendingSocket = 4444;
-        int receivingSocket = 4445;
+        int sendingSocket = 4567;
+        int receivingSocket = 7654;
         int N = 100;
         int L = 400;
         int r = 10;
